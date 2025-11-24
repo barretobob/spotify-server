@@ -1,9 +1,9 @@
+// api/callback.js
 import querystring from "querystring";
 
 export default async function handler(req, res) {
   const code = req.query.code || null;
   const state = req.query.state || null;
-
   const storedState = req.cookies ? req.cookies.spotify_auth_state : null;
 
   if (!state || state !== storedState) {
