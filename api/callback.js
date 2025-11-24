@@ -3,7 +3,7 @@ import { parse, serialize } from "cookie";
 
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-const redirect_uri = "https://spotify-server-git-main-bobbarretos-projects.vercel.app/api/callback";
+const redirect_uri = "https://spotify-server-cyan.vercel.app/api/callback";
 
 export default async function handler(req, res) {
   const { code, state } = req.query;
