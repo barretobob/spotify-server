@@ -4,39 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spotify Auth Server</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background-color: #1db954;
-      color: white;
-      text-align: center;
-    }
-    h2 {
-      font-size: 2rem;
-    }
-    p {
-      font-size: 1rem;
-      margin: 10px 0;
-    }
-    .link {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .link:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <script>
+    // Quando a página for carregada, redireciona automaticamente para a tela de login do Spotify
+    window.onload = function() {
+      window.location.href = "/api/login"; // Substitua '/api/login' pelo endpoint correto se necessário
+    };
+  </script>
 </head>
 <body>
-  <div>
-    <h2>Servidor ativo (Spotify Auth)</h2>
-    <p>O servidor está em funcionamento e aguardando requisições de autenticação.</p>
-    <p><a class="link" href="/api/login">Clique aqui para iniciar o processo de login no Spotify</a></p>
-  </div>
+  <!-- Página será redirecionada automaticamente -->
+  <h2>Redirecionando para o login do Spotify...</h2>
 </body>
 </html>
