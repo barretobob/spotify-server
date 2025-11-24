@@ -1,24 +1,21 @@
-// /api/callback.js
-const { store } = require('./_store');
+import { saveToken } from "./db";
 
-module.exports = async (req, res) => {
-  const code = req.query.code || null;
-  const sess = req.query.state || 'default';
+export default async function handler(req, res) {
+  const code = req.query.code;
+  const state = req.query.state || "default";
 
   if (!code) {
-    res.status(400).send('Missing code parameter');
-    return;
+    return res.status(400).send("Missing code");
   }
 
-  store[sess] = { code, created: Date.now() };
+  // 🔥 agora salva no /tmp em vez da memória
+  saveToken(state, { code, created: Date.now(), ready: true });
 
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader("Content-Type", "text/html");
   res.end(`
-    <html><body style="font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;">
-      <div style="text-align:center">
-        <h2>Autorização recebida!</h2>
-        <p>Você pode fechar esta aba e voltar ao After Effects.</p>
-      </div>
+    <html><body style="font-family:sans-serif;text-align:center;margin-top:40px">
+      <h2>Autorização recebida!</h2>
+      <p>Você pode fechar esta aba e voltar ao After Effects.</p>
     </body></html>
   `);
-};
+}
