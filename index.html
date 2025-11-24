@@ -1,10 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spotify Auth Server</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #1db954;
+      color: white;
+      text-align: center;
+    }
+    h2 {
+      font-size: 2rem;
+    }
+    p {
+      font-size: 1rem;
+      margin: 10px 0;
+    }
+    .link {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
-<body style="font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;">
-  <h2>Servidor ativo (Spotify Auth)</h2>
+<body>
+  <div>
+    <h2>Servidor ativo (Spotify Auth)</h2>
+    <p>O servidor está em funcionamento e aguardando requisições de autenticação.</p>
+    <p><a class="link" href="/api/login">Clique aqui para iniciar o processo de login no Spotify</a></p>
+  </div>
 </body>
 </html>
