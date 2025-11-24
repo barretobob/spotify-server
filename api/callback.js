@@ -1,4 +1,3 @@
-// api/callback.js
 import querystring from "querystring";
 
 export default async function handler(req, res) {
@@ -7,15 +6,21 @@ export default async function handler(req, res) {
   const storedState = req.cookies ? req.cookies.spotify_auth_state : null;
 
   if (!state || state !== storedState) {
-    return res.redirect("/?" + querystring.stringify({ error: "state_mismatch" }));
+    return res.redirect(
+      "/?" + querystring.stringify({ error: "state_mismatch" })
+    );
   }
 
-  // Clear the state cookie
-  res.setHeader("Set-Cookie", "spotify_auth_state=; HttpOnly; Path=/; Max-Age=0");
+  // Limpar o cookie de estado (boa prática)
+  res.setHeader(
+    "Set-Cookie",
+    "spotify_auth_state=; HttpOnly; Path=/; Max-Age=0"
+  );
 
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI || "https://spotify-server-ebon.vercel.app/api/callback";
+  const redirectUri =
+    process.env.SPOTIFY_REDIRECT_URI || "https://spotify-server-cyan.vercel.app/api/callback";
 
   const tokenUrl = "https://accounts.spotify.com/api/token";
   const body = new URLSearchParams({
@@ -39,23 +44,25 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (data.error) {
-      console.error("Error Spotify Token:", data);
-      return res.redirect("/?" + querystring.stringify({ error: "invalid_token" }));
+      console.error("Erro Spotify Token:", data);
+      return res.redirect(
+        "/?" + querystring.stringify({ error: "invalid_token" })
+      );
     }
 
     const { access_token, refresh_token } = data;
 
-    // Store tokens in cookies or another method
+    // Armazenar tokens em cookies ou outro método
     res.setHeader("Set-Cookie", [
       `spotify_access_token=${access_token}; HttpOnly; Path=/; Max-Age=3600`,
       `spotify_refresh_token=${refresh_token}; HttpOnly; Path=/; Max-Age=604800`,
     ]);
 
-    // Redirect to success page or player
+    // Redireciona para a página de sucesso ou player
     return res.redirect("/success.html");
 
   } catch (err) {
-    console.error("Error Callback:", err);
+    console.error("Erro Callback:", err);
     return res.status(500).json({ error: "callback_failed" });
   }
 }
