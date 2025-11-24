@@ -1,3 +1,8 @@
 {
-  "type": "module"
+  "name": "spotify-server",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "cookie": "^0.5.0"
+  }
 }
