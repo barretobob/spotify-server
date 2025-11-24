@@ -3,26 +3,21 @@ import querystring from "querystring";
 export default async function handler(req, res) {
   const code = req.query.code || null;
   const state = req.query.state || null;
-  const storedState = req.cookies ? req.cookies.spotify_auth_state : null;
+  const storedState = req.cookies?.spotify_auth_state || null;
 
-  // Verificação do estado para proteger contra CSRF
+  // Verificação CSRF
   if (!state || state !== storedState) {
-    return res.redirect(
-      "/?" + querystring.stringify({ error: "state_mismatch" })
-    );
+    return res.redirect("/?" + querystring.stringify({ error: "state_mismatch" }));
   }
 
-  // Limpar o cookie de estado (boa prática)
-  res.setHeader(
-    "Set-Cookie",
-    "spotify_auth_state=; HttpOnly; Path=/; Max-Age=0"
-  );
+  // Limpar cookie de estado
+  res.setHeader("Set-Cookie", "spotify_auth_state=; HttpOnly; Path=/; Max-Age=0");
 
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 
-  // Use a URI correta aqui
-  const redirectUri = "https://spotify-server-ebon.vercel.app/api/callback";
+  // Redirecionamento dinâmico
+  const redirectUri = `${req.headers['x-forwarded-proto']}://${req.headers['x-forwarded-host']}/api/callback`;
 
   const tokenUrl = "https://accounts.spotify.com/api/token";
   const body = new URLSearchParams({
@@ -34,7 +29,6 @@ export default async function handler(req, res) {
   const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
   try {
-    // Requisição para obter o token de acesso
     const response = await fetch(tokenUrl, {
       method: "POST",
       headers: {
@@ -48,28 +42,24 @@ export default async function handler(req, res) {
 
     if (data.error) {
       console.error("Erro Spotify Token:", data);
-      return res.redirect(
-        "/?" + querystring.stringify({ error: "invalid_token" })
-      );
+      return res.redirect("/?" + querystring.stringify({ error: "invalid_token" }));
     }
 
     const { access_token, refresh_token } = data;
 
-    // Armazenar tokens em cookies ou outro método
+    // Salvar tokens
     res.setHeader("Set-Cookie", [
       `spotify_access_token=${access_token}; HttpOnly; Path=/; Max-Age=3600`,
       `spotify_refresh_token=${refresh_token}; HttpOnly; Path=/; Max-Age=604800`,
     ]);
 
-    // Redireciona para a página de sucesso ou player
-  // devolve uma página mínima que fecha a aba imediatamente
-return res.send(`
-  <script>
-    window.close();
-  </script>
-  <p>Você pode fechar esta aba.</p>
-`);
-
+    // Fechar a aba automaticamente
+    return res.send(`
+      <script>
+        window.close();
+      </script>
+      <p>Você pode fechar esta aba.</p>
+    `);
 
   } catch (err) {
     console.error("Erro Callback:", err);
