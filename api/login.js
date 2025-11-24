@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 import { serialize } from "cookie";
 
 const client_id = process.env.SPOTIFY_CLIENT_ID;
-const redirect_uri = "https://spotify-server-git-main-bobbarretos-projects.vercel.app/api/callback";
+const redirect_uri = "https://spotify-server-cyan.vercel.app/api/callback";
 const scope = "user-read-playback-state user-read-currently-playing";
 
 export default function handler(req, res) {
@@ -32,3 +32,4 @@ export default function handler(req, res) {
   res.writeHead(302, { Location: `https://accounts.spotify.com/authorize?${params.toString()}` });
   res.end();
 }
+
