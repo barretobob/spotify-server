@@ -3,6 +3,7 @@ import querystring from "querystring";
 export default async function handler(req, res) {
   const code = req.query.code || null;
   const state = req.query.state || null;
+
   const storedState = req.cookies ? req.cookies.spotify_auth_state : null;
 
   if (!state || state !== storedState) {
@@ -44,13 +45,13 @@ export default async function handler(req, res) {
 
     const { access_token, refresh_token } = data;
 
-    // Store tokens in cookies or any other way you prefer
+    // Store tokens in cookies or another method
     res.setHeader("Set-Cookie", [
       `spotify_access_token=${access_token}; HttpOnly; Path=/; Max-Age=3600`,
       `spotify_refresh_token=${refresh_token}; HttpOnly; Path=/; Max-Age=604800`,
     ]);
 
-    // Redirect to your success page or player
+    // Redirect to success page or player
     return res.redirect("/success.html");
 
   } catch (err) {
