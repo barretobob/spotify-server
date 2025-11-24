@@ -1,68 +1,43 @@
-import querystring from "querystring";
+import cookie from 'cookie';
+import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-  const code = req.query.code || null;
-  const state = req.query.state || null;
-  const storedState = req.cookies?.spotify_auth_state || null;
+  const cookies = cookie.parse(req.headers.cookie || '');
+  const storedState = cookies['spotify_auth_state'];
+  const { code, state } = req.query;
 
-  // Verificação CSRF
   if (!state || state !== storedState) {
-    return res.redirect("/?" + querystring.stringify({ error: "state_mismatch" }));
+    return res.redirect('/?error=state_mismatch');
   }
 
-  // Limpar cookie de estado
-  res.setHeader("Set-Cookie", "spotify_auth_state=; HttpOnly; Path=/; Max-Age=0");
-
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-
-  // Redirecionamento dinâmico
-  const redirectUri = `${req.headers['x-forwarded-proto']}://${req.headers['x-forwarded-host']}/api/callback`;
-
-  const tokenUrl = "https://accounts.spotify.com/api/token";
   const body = new URLSearchParams({
+    grant_type: 'authorization_code',
     code,
-    redirect_uri: redirectUri,
-    grant_type: "authorization_code",
+    redirect_uri: 'https://spotify-server-git-main-bobbarretos-projects.vercel.app/api/callback'
   });
 
-  const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const authHeader = Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64');
 
   try {
-    const response = await fetch(tokenUrl, {
-      method: "POST",
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
       headers: {
-        Authorization: `Basic ${basicAuth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
+        'Authorization': `Basic ${authHeader}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body,
+      body
     });
 
     const data = await response.json();
 
     if (data.error) {
-      console.error("Erro Spotify Token:", data);
-      return res.redirect("/?" + querystring.stringify({ error: "invalid_token" }));
+      return res.redirect(`/?error=${data.error}`);
     }
 
-    const { access_token, refresh_token } = data;
-
-    // Salvar tokens
-    res.setHeader("Set-Cookie", [
-      `spotify_access_token=${access_token}; HttpOnly; Path=/; Max-Age=3600`,
-      `spotify_refresh_token=${refresh_token}; HttpOnly; Path=/; Max-Age=604800`,
-    ]);
-
-    // Fechar a aba automaticamente
-    return res.send(`
-      <script>
-        window.close();
-      </script>
-      <p>Você pode fechar esta aba.</p>
-    `);
-
+    // você pode guardar access_token e refresh_token como quiser
+    // aqui apenas redirecionamos para a home com access_token
+    res.redirect(`/?access_token=${data.access_token}&refresh_token=${data.refresh_token}`);
   } catch (err) {
-    console.error("Erro Callback:", err);
-    return res.status(500).json({ error: "callback_failed" });
+    res.redirect(`/?error=server_error`);
   }
 }
