@@ -1,7 +1,7 @@
 // Spotify Login Function
 function authenticateSpotify() {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI || "https://spotify-server-ebon.vercel.app/api/callback";
+  const redirectUri = "https://spotify-server-ebon.vercel.app/api/callback";
   const scope = [
     "user-read-playback-state",
     "user-modify-playback-state",
@@ -31,3 +31,4 @@ function authenticateSpotify() {
   // Open Spotify login in a new window (external browser window)
   window.open(authorizeUrl, '_blank', 'width=600,height=600');
 }
+
