@@ -5,6 +5,7 @@ export default async function handler(req, res) {
   const state = req.query.state || null;
   const storedState = req.cookies ? req.cookies.spotify_auth_state : null;
 
+  // Verificação do estado para proteger contra CSRF
   if (!state || state !== storedState) {
     return res.redirect(
       "/?" + querystring.stringify({ error: "state_mismatch" })
@@ -19,8 +20,9 @@ export default async function handler(req, res) {
 
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  const redirectUri =
-    process.env.SPOTIFY_REDIRECT_URI || "https://spotify-server-cyan.vercel.app/api/callback";
+
+  // Use a URI correta aqui
+  const redirectUri = "https://spotify-server-ebon.vercel.app/api/callback";
 
   const tokenUrl = "https://accounts.spotify.com/api/token";
   const body = new URLSearchParams({
@@ -32,6 +34,7 @@ export default async function handler(req, res) {
   const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
   try {
+    // Requisição para obter o token de acesso
     const response = await fetch(tokenUrl, {
       method: "POST",
       headers: {
