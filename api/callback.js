@@ -1,21 +1,84 @@
-import { saveToken } from "./db";
+// api/callback.js
+import querystring from "querystring";
 
 export default async function handler(req, res) {
-  const code = req.query.code;
-  const state = req.query.state || "default";
+  const code = req.query.code || null;
+  const state = req.query.state || null;
 
-  if (!code) {
-    return res.status(400).send("Missing code");
+  const storedState = req.cookies ? req.cookies.spotify_auth_state : null;
+
+  if (!state || state !== storedState) {
+    return res.redirect(
+      "/?" +
+        querystring.stringify({
+          error: "state_mismatch",
+        })
+    );
   }
 
-  // 🔥 agora salva no /tmp em vez da memória
-  saveToken(state, { code, created: Date.now(), ready: true });
+  // limpa cookie de state (boa prática)
+  res.setHeader(
+    "Set-Cookie",
+    "spotify_auth_state=; HttpOnly; Path=/; Max-Age=0"
+  );
 
-  res.setHeader("Content-Type", "text/html");
-  res.end(`
-    <html><body style="font-family:sans-serif;text-align:center;margin-top:40px">
-      <h2>Autorização recebida!</h2>
-      <p>Você pode fechar esta aba e voltar ao After Effects.</p>
-    </body></html>
-  `);
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  const redirectUri =
+    process.env.SPOTIFY_REDIRECT_URI ||
+    "https://spotify-server-ebon.vercel.app/api/callback";
+
+  const tokenUrl = "https://accounts.spotify.com/api/token";
+
+  // Configura body da requisição
+  const body = new URLSearchParams({
+    code,
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
+  });
+
+  const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+
+  try {
+    const response = await fetch(tokenUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${basicAuth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body,
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("Erro SPOTIFY TOKEN:", data);
+      return res.redirect(
+        "/?" +
+          querystring.stringify({
+            error: "invalid_token",
+          })
+      );
+    }
+
+    const { access_token, refresh_token } = data;
+
+    // Aqui você pode escolher o que fazer:
+    // 1. redirecionar com tokens na URL (não é recomendado)
+    // 2. guardar em cookies seguros (usamos opção abaixo)
+    // 3. enviar para algum painel seu
+    // 4. retornar JSON (para apps locais)
+
+    res.setHeader("Set-Cookie", [
+      `spotify_access_token=${access_token}; HttpOnly; Path=/; Max-Age=3600`,
+      `spotify_refresh_token=${refresh_token}; HttpOnly; Path=/; Max-Age=604800`,
+    ]);
+
+    // Redireciona para sua página principal (ajuste como quiser)
+    return res.redirect("/success.html");
+
+  } catch (err) {
+    console.error("Erro CALLBACK:", err);
+    return res.status(500).json({ error: "callback_failed" });
+  }
 }
