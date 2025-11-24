@@ -62,7 +62,14 @@ export default async function handler(req, res) {
     ]);
 
     // Redireciona para a página de sucesso ou player
-    return res.redirect("/success.html");
+  // devolve uma página mínima que fecha a aba imediatamente
+return res.send(`
+  <script>
+    window.close();
+  </script>
+  <p>Você pode fechar esta aba.</p>
+`);
+
 
   } catch (err) {
     console.error("Erro Callback:", err);
